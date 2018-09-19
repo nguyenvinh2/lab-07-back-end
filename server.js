@@ -10,7 +10,9 @@ require('dotenv').config();
 
 app.get('/weather', getWeather);
 
-app.get('/yelp', getYelp)
+app.get('/movies', getMovies);
+
+app.get('/yelp', getYelp);
 
 const PORT = process.env.PORT || 3000;
 
@@ -20,6 +22,7 @@ app.get('/location', (request, response) => {
 
     .then(result => {
       const locationResult = new LocationData (result, request);
+      
       response.send(locationResult);
       console.log(locationResult);
     })
@@ -76,6 +79,29 @@ function Yelp(data) {
   this.price = data.price;
   this.rating = data.rating;
   this.url = data.url;
+}
+
+function getMovies(request, response) {
+  const url = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.MOVIES_API_KEY}&query=${request.query.data.search_query}`;
+  return superagent.get(url)
+
+    .then(result => {
+      const moviesSummaries = result.body.results.map(movies => {
+        return new MoviesData(movies);
+      })
+      response.send(moviesSummaries);
+    })
+    .catch( error => handleError(error, response));
+}
+
+function MoviesData(movies) {
+  this.title = movies.title;
+  this.overview = movies.overview;
+  this.average_votes = movies.vote_average;
+  this.total_votes = movies.vote_count;
+  this.image_url = `https://image.tmdb.org/t/p/w200_and_h300_bestv2${movies.poster_path}`;
+  this.popularity = movies.popularity;
+  this.released_on = movies.release_date;
 }
 
 function handleError(err, res) {
