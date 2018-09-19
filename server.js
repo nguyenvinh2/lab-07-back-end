@@ -16,15 +16,19 @@ app.get('/location', (request, response) => {
   return superagent.get(url)
 
     .then(result => {
-      const locationResult = {
-        search_query: request.query.data,
-        formatted_query: result.body.results[0].formatted_address,
-        latitude: result.body.results[0].geometry.location.lat,
-        longitude: result.body.results[0].geometry.location.lng
-      };
+      const locationResult = new LocationData (result, request);
       response.send(locationResult);
+      console.log(locationResult);
     });
 });
+
+function LocationData(result, request) {
+  this.search_query = request.query.data;
+  this.formatted_query = result.body.results[0].formatted_address,
+  this.latitude = result.body.results[0].geometry.location.lat,
+  this.longitude = result.body.results[0].geometry.location.lng
+}
+
 
 app.listen(PORT, () => console.log(`Listening on ${PORT}`));
 
