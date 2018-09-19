@@ -10,6 +10,8 @@ require('dotenv').config();
 
 app.get('/weather', getWeather);
 
+app.get('/yelp', getYelp)
+
 const PORT = process.env.PORT || 3000;
 
 app.get('/location', (request, response) => {
@@ -38,10 +40,8 @@ function getWeather(request, response) {
   return superagent.get(url)
 
     .then( result => {
-      const weatherSummaries = [];
-      result.body.daily.data.forEach( day => {
-        const summary = new Weather(day);
-        weatherSummaries.push(summary);
+      const weatherSummaries = result.body.daily.data.map( day => {
+        return new Weather(day);
       })
       response.send(weatherSummaries)
       console.log(weatherSummaries);
@@ -49,16 +49,39 @@ function getWeather(request, response) {
     .catch( error => handleError(error, response));
 }
 
-function handleError(err, res) {
-  console.error(err);
-  if (res) res.status(500).send('Sorry, something went wrong');
-}
-
 function Weather(day) {
   this.time = new Date(day.time * 1000).toString().slice(0, 15);
   this.forecast = day.summary;
 }
 
+// Yelp Api request
+function getYelp(request, response) {
+  const url = `https://api.yelp.com/v3/businesses/search?location=${request.query.data.search_query}`;
+
+  superagent.get(url)
+    .set('Authorization', `Bearer ${process.env.YELP_API_KEY}`)
+    .then(result => {
+      const businessSummaries = result.body.businesses.map(data => {
+        return new Yelp(data);
+      });
+      response.send(businessSummaries);
+      console.log(businessSummaries);
+    })
+    .catch( error => handleError(error, response));
+}
+
+function Yelp(data) {
+  this.name = data.name;
+  this.image_url = data.image_url;
+  this.price = data.price;
+  this.rating = data.rating;
+  this.url = data.url;
+}
+
+function handleError(err, res) {
+  console.error(err);
+  if (res) res.status(500).send('Sorry, something went wrong');
+}
 
 app.listen(PORT, () => console.log(`Listening on ${PORT}`));
 
