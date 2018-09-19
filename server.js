@@ -39,9 +39,8 @@ function getWeather(request, response) {
 
     .then( result => {
       const weatherSummaries = [];
-      result.body.daily.data.forEach( day => {
-        const summary = new Weather(day);
-        weatherSummaries.push(summary);
+      result.body.daily.data.map( day => {
+        return new Weather(day);
       })
       response.send(weatherSummaries)
       console.log(weatherSummaries);
